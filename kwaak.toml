@@ -5,7 +5,7 @@ github_api_key = "env:KWAAK_GITHUB_TOKEN"
 openai_api_key = "env:KWAAK_OPENAI_API_KEY"
 
 tool_executor = "docker"
-otel_enabled = true
+otel_enabled = false
 
 [commands]
 test = "RUST_LOG=kwaak=debug,swiftide=debug RUST_BACKTRACE=1 cargo nextest run --no-fail-fast --color=never"
@@ -13,7 +13,7 @@ coverage = "cargo llvm-cov nextest --no-clean --summary-only"
 lint_and_fix = "cargo clippy --fix --allow-dirty --allow-staged; cargo fmt"
 
 [git]
-owner = "bosun-ai"
+owner = "bogzbonny"
 repository = "kwaak"
 main_branch = "master"
 
