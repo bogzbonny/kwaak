@@ -87,9 +87,6 @@ pub struct Config {
     /// When endless mode is enabled, the agent will keep running until it either cannot complete,
     /// did complete or was manually stopped.
     ///
-    /// In addition, the agent is instructed that it cannot ask for feedback, but should try to
-    /// complete its task instead.
-    ///
     /// When running without a TUI, the agent will always run in endless mode.
     ///
     /// WARN: There currently is _no_ limit for endless mode
@@ -126,6 +123,11 @@ pub struct Config {
     /// Defaults to 10.
     #[serde(default = "default_num_completions_for_summary")]
     pub num_completions_for_summary: usize,
+
+    /// Number of automatic retries when the LLM returns an error
+    /// Default is 0 (off)
+    #[serde(default)]
+    pub autoretry: u32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
