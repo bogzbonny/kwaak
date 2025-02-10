@@ -100,6 +100,34 @@ impl CommandHandler {
         }))
     }
 
+    async fn handle_retry_with_retries(
+        &self,
+        agent: &RunningAgent,
+        retries: u32,
+        responder: &Arc<dyn Responder>,
+        token: CancellationToken,
+    ) -> Result<()> {
+        for retry_count in 0..=retries {
+            if token.is_cancelled() {
+                return Ok(());
+            }
+
+            match agent.run().await {
+                Ok(_) => return Ok(()),
+                Err(e) if retry_count < retries => {
+                    responder.system_message(&format!(
+                        "Retry {} failed, retrying... (Error: {})",
+                        retry_count + 1,
+                        e
+                    ));
+                    continue;
+                }
+                Err(e) => return Err(e),
+            }
+        }
+        Ok(())
+    }
+
     #[tracing::instrument(skip_all, fields(otel.name = %cmd.to_string(), uuid = %event.uuid()), err)]
     async fn handle_command_event(
         &self,
@@ -131,8 +159,13 @@ impl CommandHandler {
 
                 tokio::select! {
                     () = token.cancelled() => Ok(()),
-                    result = agent.query(&message) => result,
-
+                    result = agent.query(&message) => {
+                        if result.is_err() && repository.config().autoretry > 0 {
+                            self.handle_retry_with_retries(&agent, repository.config().autoretry, &event.clone_responder(), token).await
+                        } else {
+                            result
+                        }
+                    },
                 }?;
             }
             Command::Diff => {
@@ -178,8 +211,13 @@ impl CommandHandler {
                 agent.agent_context.redrive().await;
                 tokio::select! {
                     () = token.cancelled() => Ok(()),
-                    result = agent.run() => result,
-
+                    result = agent.run() => {
+                        if result.is_err() && repository.config().autoretry > 0 {
+                            self.handle_retry_with_retries(&agent, repository.config().autoretry, &event.clone_responder(), token).await
+                        } else {
+                            result
+                        }
+                    },
                 }?;
             }
             Command::Quit { .. } => unreachable!("Quit should be handled earlier"),
