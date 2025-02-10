@@ -28,6 +28,9 @@ github_api_key = "{{ github_api_key }}"
 ## Optional: Connect kwaak to tavily to enable it to search the web
 #tavily_api_key = "env:TAVILY_API_KEY"
 
+## Number of automatic retries when the LLM returns an error (default: 0)
+autoretry = 0
+
 ## Commands the agent uses for tools
 ## Kwaak can use tests, coverage, and lints to verify generated code.
 ## At the moment, the format of the output does not matter.
@@ -86,7 +89,7 @@ base_url = "{{ llm.base_url }}"
 {% endif -%}
 
 [llm.embedding]
-provider = "{{ embed_llm.provider }}"
+provider = "{{ llm.provider }}"
 embedding_model = "{{ embed_llm.embedding_model }}"
 {% if llm.base_url -%}
 base_url = "{{ embed_llm.base_url }}"
