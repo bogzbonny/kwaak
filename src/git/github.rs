@@ -4,7 +4,10 @@
 use std::sync::Mutex;
 
 use anyhow::{Context, Result};
-use octocrab::{models::pulls::PullRequest, Octocrab, Page};
+use octocrab::{
+    models::{pulls::PullRequest, issues::Issue, Comment},
+    Octocrab, Page,
+};
 use reqwest::header::{HeaderMap, ACCEPT};
 use secrecy::SecretString;
 use serde::{Deserialize, Serialize};
