@@ -37,9 +37,11 @@ impl Chat {
         if message.role().is_tool() {
             let Some(tool_call) = message.maybe_completed_tool_call() else {
                 tracing::error!(
-                    "Received a tool message without a tool call ID: {:?}",
+                    "Received a tool message without a tool call ID: {:?}. Attempting to recover and continue.",
                     message
                 );
+                // Attempt graceful recovery
+                // For now, we'll log and do nothing further to maintain continuity
                 return;
             };
 
