@@ -21,6 +21,8 @@ use super::{
     responder::{CommandResponse, Responder},
 };
 
+use swiftide::chat_completion::errors::ToolError;
+
 /// Commands always flow via the `CommandHandler`
 ///
 /// It is the principle entry point for the backend, and handles all commands
