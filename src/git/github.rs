@@ -308,6 +308,49 @@ mod tests {
     }
 }
 
+#[derive(Debug)]
+pub struct IssueWithComments {
+    pub issue: octocrab::models::issues::Issue,
+    pub comments: Vec<octocrab::models::issues::Comment>,
+}
+
+impl GithubSession {
+    #[tracing::instrument(skip(self), err)]
+    pub async fn get_issue(&self, issue_number: u32) -> Result<IssueWithComments> {
+        if !self.repository.config().is_github_enabled() {
+            return Err(anyhow::anyhow!("Github is not enabled"));
+        }
+
+        let owner = self.repository.config().git.owner
+            .as_deref()
+            .ok_or_else(|| anyhow::anyhow!("No owner configured"))?;
+        let repo = self.repository.config().git.repository
+            .as_deref()
+            .ok_or_else(|| anyhow::anyhow!("No repository configured"))?;
+
+        let issue = self.octocrab
+            .issues(owner, repo)
+            .get(issue_number)
+            .await
+            .context("Failed to fetch issue")?;
+
+        let mut comments = Vec::new();
+        let mut page = self.octocrab
+            .issues(owner, repo)
+            .list_comments(issue_number)
+            .send()
+            .await
+            .context("Failed to fetch comments")?;
+
+        comments.extend(page.items);
+        while let Some(next_page) = self.octocrab.get_page(&page.next).await? {
+            page = next_page;
+            comments.extend(page.items);
+        }
+
+        Ok(IssueWithComments { issue, comments })
+    }
+}
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CodeWithMatches {
     pub name: String,
