@@ -111,79 +111,107 @@ impl CommandHandler {
         tracing::warn!("Handling command {cmd}");
 
         #[allow(clippy::match_wildcard_for_single_variants)]
-        match cmd {
-            Command::StopAgent => {
-                self.stop_agent(event.uuid(), event.clone_responder())
-                    .await?;
-            }
-            Command::IndexRepository { .. } => {
-                indexing::index_repository(repository, Some(event.clone_responder())).await?;
-            }
-            Command::ShowConfig => event
-                .responder()
-                .system_message(&toml::to_string_pretty(repository.config())?),
-            Command::Chat { ref message } => {
-                let message = message.clone();
-                let agent = self
-                    .find_or_start_agent_by_uuid(event.uuid(), &message, event.clone_responder())
-                    .await?;
-                let token = agent.cancel_token.clone();
-
-                tokio::select! {
-                    () = token.cancelled() => Ok(()),
-                    result = agent.query(&message) => result,
-
-                }?;
-            }
-            Command::Diff => {
-                let Some(agent) = self.find_agent_by_uuid(event.uuid()).await else {
-                    event
-                        .responder()
-                        .system_message("No agent found (yet), is it starting up?");
-                    return Ok(());
-                };
-
-                let base_sha = &agent.agent_environment.start_ref;
-                let diff = git::util::diff(agent.executor.as_ref(), &base_sha, true).await?;
-
-                event.responder().system_message(&diff);
-            }
-            Command::Exec { cmd } => {
-                let Some(agent) = self.find_agent_by_uuid(event.uuid()).await else {
-                    event
-                        .responder()
-                        .system_message("No agent found (yet), is it starting up?");
-                    return Ok(());
-                };
-
-                let output = accept_non_zero_exit(agent.executor.exec_cmd(cmd).await)?.output;
-
-                event.responder().system_message(&output);
-            }
-            Command::RetryChat => {
-                let Some(agent) = self.find_agent_by_uuid(event.uuid()).await else {
-                    event
-                        .responder()
-                        .system_message("No agent found (yet), is it starting up?");
-                    return Ok(());
-                };
-                let mut token = agent.cancel_token.clone();
-                if token.is_cancelled() {
-                    if let Some(agent) = self.agents.write().await.get_mut(&event.uuid()) {
-                        agent.cancel_token = CancellationToken::new();
-                        token = agent.cancel_token.clone();
+                match cmd {
+                    Command::StopAgent => {
+                        self.stop_agent(event.uuid(), event.clone_responder())
+                            .await?;
                     }
+                    Command::IndexRepository { .. } => {
+                        indexing::index_repository(repository, Some(event.clone_responder())).await?;
+                    }
+                    Command::ShowConfig => event
+                        .responder()
+                        .system_message(&toml::to_string_pretty(repository.config())?),
+                    Command::Chat { ref message } => {
+                        let message = message.clone();
+                        let agent = self
+                            .find_or_start_agent_by_uuid(event.uuid(), &message, event.clone_responder())
+                            .await?;
+                        let token = agent.cancel_token.clone();
+
+                        tokio::select! {
+                            () = token.cancelled() => Ok(()),
+                            result = agent.query(&message) => result,
+
+                        }?;
+                    }
+                    Command::Diff => {
+                        let Some(agent) = self.find_agent_by_uuid(event.uuid()).await else {
+                            event
+                                .responder()
+                                .system_message("No agent found (yet), is it starting up?");
+                            return Ok(());
+                        };
+
+                        let base_sha = &agent.agent_environment.start_ref;
+                        let diff = git::util::diff(agent.executor.as_ref(), &base_sha, true).await?;
+
+                        event.responder().system_message(&diff);
+                    }
+                    Command::Exec { cmd } => {
+                        let Some(agent) = self.find_agent_by_uuid(event.uuid()).await else {
+                            event
+                                .responder()
+                                .system_message("No agent found (yet), is it starting up?");
+                            return Ok(());
+                        };
+
+                        let output = accept_non_zero_exit(agent.executor.exec_cmd(cmd).await)?.output;
+
+                        event.responder().system_message(&output);
+                    }
+                    Command::RetryChat => {
+                        let Some(agent) = self.find_agent_by_uuid(event.uuid()).await else {
+                            event
+                                .responder()
+                                .system_message("No agent found (yet), is it starting up?");
+                            return Ok(());
+                        };
+                        let mut token = agent.cancel_token.clone();
+                        if token.is_cancelled() {
+                            if let Some(agent) = self.agents.write().await.get_mut(&event.uuid()) {
+                                agent.cancel_token = CancellationToken::new();
+                                token = agent.cancel_token.clone();
+                            }
+                        }
+
+                        agent.agent_context.redrive().await;
+                        tokio::select! {
+                            () = token.cancelled() => Ok(()),
+                            result = agent.run() => result,
+
+                        }?;
+                    }
+                    Command::GhIssue { issue_number } => {
+                        let session = git::github::GithubSession::from_repository(repository)?;
+                        let issue_with_comments = session.get_issue(issue_number).await?;
+
+                        let owner = repository.config().git.owner.as_deref()
+                            .ok_or_else(|| anyhow::anyhow!("No owner configured"))?;
+                        let repo_name = repository.config().git.repository.as_deref()
+                            .ok_or_else(|| anyhow::anyhow!("No repository configured"))?;
+
+                        let context = tera::Context::from_serialize(serde_json::json!({
+                            "issue": issue_with_comments.issue,
+                            "comments": issue_with_comments.comments,
+                            "repository_owner": owner,
+                            "repository": repo_name,
+                        }))?;
+
+                        let issue_summary = crate::templates::Templates::render("github_issue.md", &context)?;
+
+                        let agent = self
+                            .find_or_start_agent_by_uuid(event.uuid(), &issue_summary, event.clone_responder())
+                            .await?;
+                        let token = agent.cancel_token.clone();
+
+                        tokio::select! {
+                            () = token.cancelled() => Ok(()),
+                            result = agent.query(&issue_summary) => result,
+                        }?;
+                    }
+                    Command::Quit { .. } => unreachable!("Quit should be handled earlier"),
                 }
-
-                agent.agent_context.redrive().await;
-                tokio::select! {
-                    () = token.cancelled() => Ok(()),
-                    result = agent.run() => result,
-
-                }?;
-            }
-            Command::Quit { .. } => unreachable!("Quit should be handled earlier"),
-        }
         // Sleep for a tiny bit to avoid racing with agent responses
         tokio::time::sleep(Duration::from_millis(100)).await;
         let mut elapsed = now.elapsed();
