@@ -49,15 +49,6 @@ pub async fn start_tool_evaluation_agent(
                 Ok(())
             })
         })
-        .on_tool_error(move |_, error| {  // New error handling for tool misuse
-            let responder = responder_for_tools.clone();
-            Box::pin(async move {
-                responder.update(&format!("Tool error occurred: {}. Attempting graceful continuation...", error));
-                // Here we would attempt to recover
-                // This could involve logging, ignoring the failed call, etc.
-                Ok(())
-            })
-        })
         .build()?;
 
     let agent = RunningAgent::builder()
