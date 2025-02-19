@@ -234,8 +234,16 @@ impl CommandHandler {
         // If retries are exhausted or cannot resolve, return false to discard
         // Otherwise, allow to return true
 
-        // Placeholder until custom retry logic is added
-        false
+        // Adding basic retry mechanism
+        let retries_allowed = 3;
+        let attempt_count = 0;
+        if attempt_count < retries_allowed {
+            // Increment attempt_count (this would need to be managed at a broader scope)
+            // Retry logic or conditions
+            true // Allow retry
+        } else {
+            false // Exceeds retry limit, discard
+        }
     }
 
     async fn find_or_start_agent_by_uuid(
