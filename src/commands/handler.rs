@@ -83,16 +83,34 @@ impl CommandHandler {
                 let this_handler = Arc::clone(&this_handler);
 
                 joinset.spawn(async move {
-                    let result = this_handler.handle_command_event(&repository, &event, &event.command()).await;
+                    let result = match this_handler.handle_command_event(&repository, &event, &event.command()).await {
+                        Ok(_) => Ok(()),
+                        Err(error) => {
+                            // Detect tool misuse errors and handle them gracefully
+                            if let Some(tool_error) = error.downcast_ref::<ToolError>() {
+                                let allow_retry = this_handler.handle_tool_misuse(event.clone(), tool_error).await;
+                                if allow_retry {
+                                    return Err(error);
+                                } else {
+                                    tracing::warn!("Discarding failed tool invocation due to tool misuse: {tool_error}");
+                                    event.responder().system_message("Tool misuse detected and discarded. Awaiting further instructions...");
+                                    return Ok(());
+                                }
+                            }
+                            // Handle other errors
+                            tracing::error!(?error, cmd = %event.command(), "Failed to handle command {cmd} with error {error:#}", cmd= event.command());
+                            event.responder().system_message(&format!(
+                                    "Failed to handle command: {error:#}"
+                                ));
+                            Err(error)
+                        }
+                    };
                     event.responder().send(CommandResponse::Completed(event.uuid()));
 
-                    if let Err(error) = result {
-                        tracing::error!(?error, cmd = %event.command(), "Failed to handle command {cmd} with error {error:#}", cmd= event.command());
-                        event.responder().system_message(&format!(
-                                "Failed to handle command: {error:#}"
-                            ));
-
-                    };
+                    if result.is_err() {
+                        // Log failure but discard redundant shutdown as handled above
+                        tracing::warn!("Command failed, but agent is continuing...");
+                    }
                 });
             }
 
@@ -200,6 +218,19 @@ impl CommandHandler {
         ));
 
         Ok(())
+    }
+
+    async fn handle_tool_misuse(
+        &self,
+        event: CommandEvent,
+        tool_error: &ToolError
+    ) -> bool {
+        // Logic to determine if retry is warranted
+        // If retries are exhausted or cannot resolve, return false to discard
+        // Otherwise, allow to return true
+
+        // Placeholder until custom retry logic is added
+        false
     }
 
     async fn find_or_start_agent_by_uuid(
