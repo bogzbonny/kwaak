@@ -328,22 +328,16 @@ impl GithubSession {
             .as_deref()
             .ok_or_else(|| anyhow::anyhow!("No repository configured"))?;
 
-
-#[derive(Debug, Clone)]
-pub struct IssueWithComments {
-    pub issue: octocrab::models::issues::Issue,
-    pub comments: Vec<octocrab::models::IssueComment>,
-}
         let issue = self.octocrab
             .issues(owner, repo)
-            .get(issue_number)
+            .get(issue_number.into())
             .await
             .context("Failed to fetch issue")?;
 
         let mut comments = Vec::new();
         let mut page = self.octocrab
             .issues(owner, repo)
-            .list_comments(issue_number)
+            .list_comments(issue_number.into())
             .send()
             .await
             .context("Failed to fetch comments")?;
