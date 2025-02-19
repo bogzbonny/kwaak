@@ -35,6 +35,9 @@ pub enum Command {
     /// and get the output
     Exec { cmd: swiftide::traits::Command },
 
+    /// Retrieve and summarize a GitHub issue
+    GithubIssue { number: u64 },
+
     /// Retry the last chat with the agent
     /// Will reset history to the point of the last chat, then re-run the chat
     RetryChat,
