@@ -109,9 +109,9 @@ impl CommandHandler {
                     };
                     event.responder().send(CommandResponse::Completed(event.uuid()));
 
-                    if result.is_err() {
+                    if let Err(err) = result { // Correct handling of error variable
                         // Log failure but discard redundant shutdown as handled above
-                        tracing::warn!("Command failed, but agent is continuing...");
+                        tracing::warn!("Command failed with error {err}, but agent is continuing...");
                     }
                 });
             }
@@ -224,8 +224,8 @@ impl CommandHandler {
 
     async fn handle_tool_misuse(
         &self,
-        event: CommandEvent,
-        tool_error: &ToolError
+        _event: CommandEvent,
+        _tool_error: &ToolError
     ) -> bool {
         // Logic to determine if retry is warranted
         // If retries are exhausted or cannot resolve, return false to discard
