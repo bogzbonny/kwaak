@@ -76,6 +76,29 @@ impl GithubSession {
         &self.repository.config().git.main_branch
     }
 
+    /// Gets an issue and its comments from GitHub
+    #[tracing::instrument(skip(self), err)]
+    pub async fn get_issue(&self, number: u64) -> Result<(Issue, Vec<Comment>)> {
+        let owner = self.repository.config().git.owner.as_deref()
+            .ok_or(anyhow::anyhow!("No owner configured"))?;
+        let repo = self.repository.config().git.repository.as_deref()
+            .ok_or(anyhow::anyhow!("No repository configured"))?;
+
+        let issue = self.octocrab.issues(owner, repo)
+            .get(number)
+            .await
+            .context("Failed to fetch issue")?;
+
+        let comments = self.octocrab.issues(owner, repo)
+            .list_comments(number)
+            .send()
+            .await
+            .context("Failed to fetch comments")?
+            .items;
+
+        Ok((issue, comments))
+    }
+
     #[tracing::instrument(skip(self), err)]
     pub async fn search_code(&self, query: &str) -> Result<Page<CodeWithMatches>> {
         let mut headers = HeaderMap::new();
