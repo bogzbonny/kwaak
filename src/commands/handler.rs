@@ -1,6 +1,6 @@
 use std::{collections::HashMap, sync::Arc, time::Duration};
 
-use anyhow::Result;
+use anyhow::{Result, Error};
 use tokio::{
     sync::{mpsc, RwLock},
     task::{self},
@@ -96,7 +96,7 @@ impl CommandHandler {
                                 } else {
                                     tracing::warn!("Discarding failed tool invocation due to tool misuse: {tool_error}");
                                     event.responder().system_message("Tool misuse detected and discarded. Awaiting further instructions...");
-                                    return Ok(());
+                                    return Ok(()) as Result<(), Error>;
                                 }
                             }
                             // Handle other errors
@@ -112,7 +112,10 @@ impl CommandHandler {
                     if let Err(err) = result { // Correct handling of error variable
                         // Log failure but discard redundant shutdown as handled above
                         tracing::warn!("Command failed with error {err}, but agent is continuing...");
+                        // Return the error to the caller
+                        return Err(err);
                     }
+                    Ok::<(), Error>(()) // Ensure the whole closure returns Result
                 });
             }
 
