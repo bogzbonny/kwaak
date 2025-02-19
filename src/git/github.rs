@@ -328,6 +328,12 @@ impl GithubSession {
             .as_deref()
             .ok_or_else(|| anyhow::anyhow!("No repository configured"))?;
 
+
+#[derive(Debug, Clone)]
+pub struct IssueWithComments {
+    pub issue: octocrab::models::issues::Issue,
+    pub comments: Vec<octocrab::models::IssueComment>,
+}
         let issue = self.octocrab
             .issues(owner, repo)
             .get(issue_number)
