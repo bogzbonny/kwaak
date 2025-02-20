@@ -191,7 +191,27 @@ impl CommandHandler {
                 };
 
                 let summary = gh_session.fetch_issue(number).await?;
-                let message = Templates::render("github_issue.md", &summary)?;
+                repository.runtime_settings().set("pending_issue", &summary)?;
+                event.responder().system_message(&format!(
+                    "Found issue #{} - {}\nType /gh_issue_confirm {} to view it.",
+                    number, summary.title, number
+                ));
+            }
+            Command::GithubIssueConfirm { number } => {
+                let Some(pending_issue) = repository.runtime_settings().get::<IssueSummary>("pending_issue") else {
+                    event.responder().system_message("No pending issue to confirm. Use /gh_issue first.");
+                    return Ok(());
+                };
+
+                if pending_issue.number != number {
+                    event.responder().system_message(&format!(
+                        "Pending issue #{} does not match requested issue #{}",
+                        pending_issue.number, number
+                    ));
+                    return Ok(());
+                }
+
+                let message = Templates::render("github_issue.md", &pending_issue)?;
                 event.responder().system_message(&message);
             }
             Command::Quit { .. } => unreachable!("Quit should be handled earlier"),
