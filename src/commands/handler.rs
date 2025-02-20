@@ -184,6 +184,16 @@ impl CommandHandler {
 
                 }?;
             }
+            Command::GithubIssue { number } => {
+                let Some(gh_session) = repository.github_session() else {
+                    event.responder().system_message("GitHub integration is not enabled");
+                    return Ok(());
+                };
+
+                let summary = gh_session.fetch_issue(number).await?;
+                let message = Templates::render("github_issue.md", &summary)?;
+                event.responder().system_message(&message);
+            }
             Command::Quit { .. } => unreachable!("Quit should be handled earlier"),
         }
         // Sleep for a tiny bit to avoid racing with agent responses
