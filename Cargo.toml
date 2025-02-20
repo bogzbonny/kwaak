@@ -145,10 +145,10 @@ default = ["otel"]
 
 
 [patch.crates-io]
-swiftide = { git = "https://github.com/bogzbonny/swiftide", branch = "graceful_tool" }
-# swiftide = { path = "../swiftide/swiftide" }
-# swiftide-macros = { path = "../swiftide/swiftide-macros" }
-# swiftide-core = { path = "../swiftide/swiftide-core" }
+#swiftide = { git = "https://github.com/bogzbonny/swiftide", branch = "graceful_tool" }
+ swiftide = { path = "../swiftide/swiftide" }
+ swiftide-macros = { path = "../swiftide/swiftide-macros" }
+ swiftide-core = { path = "../swiftide/swiftide-core" }
 
 
 # The profile that 'dist' will build with
