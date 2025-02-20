@@ -328,3 +328,9 @@ pub struct TextMatches {
     fragment: String,
     // matches: Vec<Match>,
 }
+
+#[derive(Debug)]
+pub struct IssueSummary {
+    pub issue: octocrab::models::issues::Issue,
+    pub comments: Vec<octocrab::models::issues::Comment>,
+}
