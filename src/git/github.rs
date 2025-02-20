@@ -372,3 +372,110 @@ pub struct IssueSummary {
     pub issue: octocrab::models::issues::Issue,
     pub comments: Vec<octocrab::models::issues::Comment>,
 }
+
+#[cfg(test)]
+mod issue_tests {
+    use super::*;
+    use crate::test_utils;
+    use octocrab::models::{issues::{Issue, Comment}, User};
+    use chrono::{DateTime, Utc};
+
+    #[tokio::test]
+    async fn test_fetch_issue_not_enabled() {
+        let (repository, _) = test_utils::test_repository();
+        let session = GithubSession::from_repository(&repository).unwrap();
+        let result = session.fetch_issue(1).await;
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err().to_string(), "Github is not enabled");
+    }
+
+    #[tokio::test]
+    async fn test_fetch_issue_enabled() {
+        let (mut repository, _) = test_utils::test_repository();
+        let config_mut = repository.config_mut();
+        config_mut.github_api_key = Some("token".into());
+        config_mut.git.owner = Some("owner".into());
+        config_mut.git.repository = Some("repo".into());
+
+        let mock_issue = Issue {
+            id: 1,
+            number: 1,
+            title: Some("Test Issue".into()),
+            body: Some("This is a test issue".into()),
+            state: "open".into(),
+            user: Some(User {
+                id: 1,
+                login: "user".into(),
+                // Fill in required fields with default values
+                node_id: "".into(),
+                avatar_url: "".into(),
+                gravatar_id: None,
+                html_url: "".into(),
+                r#type: "".into(),
+                site_admin: false,
+                url: "".into(),
+            }),
+            labels: vec![],
+            assignee: None,
+            assignees: vec![],
+            comments: 0,
+            pull_request: None,
+            closed_at: None,
+            created_at: DateTime::parse_from_rfc3339("2021-01-01T00:00:00Z").unwrap().with_timezone(&Utc),
+            updated_at: DateTime::parse_from_rfc3339("2021-01-01T00:00:00Z").unwrap().with_timezone(&Utc),
+            closed_by: None,
+            milestone: None,
+            locked: false,
+            active_lock_reason: None,
+            draft: false,
+            author_association: "".into(),
+            reactions: None,
+            node_id: "".into(),
+            url: "".into(),
+            repository_url: "".into(),
+            labels_url: "".into(),
+            comments_url: "".into(),
+            events_url: "".into(),
+            html_url: "".into(),
+            timeline_url: None,
+        };
+
+        let mock_comments = vec![
+            Comment {
+                id: 1,
+                node_id: "".into(),
+                url: "".into(),
+                body: Some("This is a test comment".into()),
+                html_url: "".into(),
+                user: Some(User {
+                    id: 1,
+                    login: "commenter".into(),
+                    // Fill in required fields with default values
+                    node_id: "".into(),
+                    avatar_url: "".into(),
+                    gravatar_id: None,
+                    html_url: "".into(),
+                    r#type: "".into(),
+                    site_admin: false,
+                    url: "".into(),
+                }),
+                created_at: DateTime::parse_from_rfc3339("2021-01-01T00:00:00Z").unwrap().with_timezone(&Utc),
+                updated_at: DateTime::parse_from_rfc3339("2021-01-01T00:00:00Z").unwrap().with_timezone(&Utc),
+                author_association: "".into(),
+                reactions: None,
+                performed_via_github_app: None,
+            }
+        ];
+
+        let issue_summary = IssueSummary {
+            issue: mock_issue,
+            comments: mock_comments,
+        };
+
+        let context = tera::Context::from_serialize(&issue_summary).unwrap();
+        let rendered = Templates::render("github_issue.md", &context).unwrap();
+
+        insta::assert_snapshot!(rendered);
+    }
+}
+}
