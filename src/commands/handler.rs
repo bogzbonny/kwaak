@@ -11,8 +11,10 @@ use uuid::Uuid;
 use crate::{
     agent::{self, RunningAgent},
     frontend::App,
-    git, indexing,
+    git::{self, github::IssueSummary},
+    indexing,
     repository::Repository,
+    templates::Templates,
     util::accept_non_zero_exit,
 };
 
