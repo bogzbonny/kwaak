@@ -311,6 +311,26 @@ mod github_tests {
 
     #[tokio::test]
     async fn test_github_issue_command_enabled() {
+        let (mut repository, _) = test_utils::test_repository();
+        let config_mut = repository.config_mut();
+        config_mut.github_api_key = Some("token".into());
+        config_mut.git.owner = Some("owner".into());
+        config_mut.git.repository = Some("repo".into());
+
+        let handler = CommandHandler::from_repository(repository);
+        let responder = Arc::new(MockResponder::new());
+        let event = CommandEvent::builder()
+            .command(Command::GithubIssue { number: 1 })
+            .uuid(Uuid::new_v4())
+            .responder(responder.clone())
+            .build()
+            .unwrap();
+
+        let result = handler.handle_command_event(&handler.repository, &event, &event.command()).await;
+        assert!(result.is_ok());
+        // Should have two messages: the GitHub issue message and the success message
+        assert_eq!(responder.messages.lock().unwrap().len(), 2);
+    }
 
     #[tokio::test]
     async fn test_github_issue_confirm_no_pending() {
@@ -395,25 +415,5 @@ mod github_tests {
         let messages = responder.messages.lock().unwrap();
         assert_eq!(messages.len(), 2);
         assert!(messages[0].contains("Test Issue"));
-    }
-        let (mut repository, _) = test_utils::test_repository();
-        let config_mut = repository.config_mut();
-        config_mut.github_api_key = Some("token".into());
-        config_mut.git.owner = Some("owner".into());
-        config_mut.git.repository = Some("repo".into());
-
-        let handler = CommandHandler::from_repository(repository);
-        let responder = Arc::new(MockResponder::new());
-        let event = CommandEvent::builder()
-            .command(Command::GithubIssue { number: 1 })
-            .uuid(Uuid::new_v4())
-            .responder(responder.clone())
-            .build()
-            .unwrap();
-
-        let result = handler.handle_command_event(&handler.repository, &event, &event.command()).await;
-        assert!(result.is_ok());
-        // Should have two messages: the GitHub issue message and the success message
-        assert_eq!(responder.messages.lock().unwrap().len(), 2);
     }
 }
