@@ -41,6 +41,9 @@ pub enum Command {
 
     /// Fetch and summarize a GitHub issue and its comments
     GithubIssue { number: u64 },
+
+    /// Confirm a GitHub issue summary
+    GithubIssueConfirm { number: u64 },
 }
 
 #[derive(Debug, Clone, Builder)]
