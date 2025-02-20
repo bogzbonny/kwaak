@@ -167,6 +167,44 @@ impl GithubSession {
 
         Ok(pull_request)
     }
+    /// Fetches an issue and its comments from GitHub
+    ///
+    /// # Arguments
+    ///
+    /// * `issue_number` - The number of the issue to fetch
+    ///
+    /// # Returns
+    ///
+    /// Returns a Result containing the issue and its comments
+    #[tracing::instrument(skip(self), err)]
+    pub async fn fetch_issue(&self, issue_number: u64) -> Result<IssueSummary> {
+        if !self.repository.config().is_github_enabled() {
+            return Err(anyhow::anyhow!("Github is not enabled"));
+        }
+
+        let owner = self.repository.config().git.owner.as_deref().unwrap();
+        let repo = self.repository.config().git.repository.as_deref().unwrap();
+
+        let issue = self
+            .octocrab
+            .issues(owner, repo)
+            .get(issue_number)
+            .await
+            .context("Failed to fetch issue")?;
+
+        let comments = self
+            .octocrab
+            .issues(owner, repo)
+            .list_comments(issue_number)
+            .send()
+            .await
+            .context("Failed to fetch comments")?;
+
+        Ok(IssueSummary {
+            issue,
+            comments: comments.items,
+        })
+    }
 }
 
 // Temporarily disabled, if messages get too large the PR can't be created.
