@@ -194,7 +194,9 @@ impl CommandHandler {
                 repository.runtime_settings().set("pending_issue", &summary)?;
                 event.responder().system_message(&format!(
                     "Found issue #{} - {}\nType /gh_issue_confirm {} to view it.",
-                    number, summary.title, number
+                    number,
+                    summary.issue.title.as_deref().unwrap_or("No title"),
+                    number
                 ));
             }
             Command::GithubIssueConfirm { number } => {
