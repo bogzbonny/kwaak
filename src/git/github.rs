@@ -346,12 +346,6 @@ mod tests {
     }
 }
 
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct PendingIssue {
-    pub issue_number: u64,
-    pub is_confirmed: bool,
-}
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CodeWithMatches {
     pub name: String,
@@ -374,11 +368,6 @@ pub struct TextMatches {
 }
 
 #[derive(Debug)]
-#[derive(Debug, Serialize, Deserialize)]
-pub struct IssueSummary {
-    pub issue: octocrab::models::issues::Issue,
-    pub comments: Vec<octocrab::models::issues::Comment>,
-}
 pub struct IssueSummary {
     pub issue: octocrab::models::issues::Issue,
     pub comments: Vec<octocrab::models::issues::Comment>,
@@ -488,4 +477,5 @@ mod issue_tests {
 
         insta::assert_snapshot!(rendered);
     }
+}
 }
