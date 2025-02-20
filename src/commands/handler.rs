@@ -311,6 +311,91 @@ mod github_tests {
 
     #[tokio::test]
     async fn test_github_issue_command_enabled() {
+
+    #[tokio::test]
+    async fn test_github_issue_confirm_no_pending() {
+        let (repository, _) = test_utils::test_repository();
+        let handler = CommandHandler::from_repository(repository);
+        let responder = Arc::new(MockResponder::new());
+        let event = CommandEvent::builder()
+            .command(Command::GithubIssueConfirm { number: 1 })
+            .uuid(Uuid::new_v4())
+            .responder(responder.clone())
+            .build()
+            .unwrap();
+
+        let result = handler.handle_command_event(&handler.repository, &event, &event.command()).await;
+        assert!(result.is_ok());
+        let messages = responder.messages.lock().unwrap();
+        assert_eq!(messages.len(), 2);
+        assert!(messages[0].contains("No pending issue to confirm"));
+    }
+
+    #[tokio::test]
+    async fn test_github_issue_confirm_wrong_number() {
+        let (mut repository, _) = test_utils::test_repository();
+        let config_mut = repository.config_mut();
+        config_mut.github_api_key = Some("token".into());
+        config_mut.git.owner = Some("owner".into());
+        config_mut.git.repository = Some("repo".into());
+        
+        // Store a pending issue
+        let summary = IssueSummary {
+            number: 1,
+            title: "Test Issue".into(),
+            body: "Test Body".into(),
+            comments: vec![],
+        };
+        repository.runtime_settings().set("pending_issue", &summary).unwrap();
+
+        let handler = CommandHandler::from_repository(repository);
+        let responder = Arc::new(MockResponder::new());
+        let event = CommandEvent::builder()
+            .command(Command::GithubIssueConfirm { number: 2 })
+            .uuid(Uuid::new_v4())
+            .responder(responder.clone())
+            .build()
+            .unwrap();
+
+        let result = handler.handle_command_event(&handler.repository, &event, &event.command()).await;
+        assert!(result.is_ok());
+        let messages = responder.messages.lock().unwrap();
+        assert_eq!(messages.len(), 2);
+        assert!(messages[0].contains("does not match requested issue"));
+    }
+
+    #[tokio::test]
+    async fn test_github_issue_confirm_success() {
+        let (mut repository, _) = test_utils::test_repository();
+        let config_mut = repository.config_mut();
+        config_mut.github_api_key = Some("token".into());
+        config_mut.git.owner = Some("owner".into());
+        config_mut.git.repository = Some("repo".into());
+        
+        // Store a pending issue
+        let summary = IssueSummary {
+            number: 1,
+            title: "Test Issue".into(),
+            body: "Test Body".into(),
+            comments: vec![],
+        };
+        repository.runtime_settings().set("pending_issue", &summary).unwrap();
+
+        let handler = CommandHandler::from_repository(repository);
+        let responder = Arc::new(MockResponder::new());
+        let event = CommandEvent::builder()
+            .command(Command::GithubIssueConfirm { number: 1 })
+            .uuid(Uuid::new_v4())
+            .responder(responder.clone())
+            .build()
+            .unwrap();
+
+        let result = handler.handle_command_event(&handler.repository, &event, &event.command()).await;
+        assert!(result.is_ok());
+        let messages = responder.messages.lock().unwrap();
+        assert_eq!(messages.len(), 2);
+        assert!(messages[0].contains("Test Issue"));
+    }
         let (mut repository, _) = test_utils::test_repository();
         let config_mut = repository.config_mut();
         config_mut.github_api_key = Some("token".into());
