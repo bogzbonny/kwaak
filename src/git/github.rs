@@ -374,6 +374,11 @@ pub struct TextMatches {
 }
 
 #[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
+pub struct IssueSummary {
+    pub issue: octocrab::models::issues::Issue,
+    pub comments: Vec<octocrab::models::issues::Comment>,
+}
 pub struct IssueSummary {
     pub issue: octocrab::models::issues::Issue,
     pub comments: Vec<octocrab::models::issues::Comment>,
