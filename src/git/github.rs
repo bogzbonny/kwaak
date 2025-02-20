@@ -484,4 +484,3 @@ mod issue_tests {
         insta::assert_snapshot!(rendered);
     }
 }
-}
