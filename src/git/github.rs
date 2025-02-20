@@ -346,6 +346,12 @@ mod tests {
     }
 }
 
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct PendingIssue {
+    pub issue_number: u64,
+    pub is_confirmed: bool,
+}
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CodeWithMatches {
     pub name: String,
