@@ -38,6 +38,9 @@ pub enum Command {
     /// Retry the last chat with the agent
     /// Will reset history to the point of the last chat, then re-run the chat
     RetryChat,
+
+    /// Fetch and summarize a GitHub issue and its comments
+    GithubIssue { number: u64 },
 }
 
 #[derive(Debug, Clone, Builder)]
