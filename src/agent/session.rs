@@ -191,9 +191,9 @@ async fn running_message_handler(
 }
 
 static BLACKLIST_DELEGATE_TOOLS: &[&str] = &[
-    "write_file",
+    "write_content_to_file",
     "shell_command",
-    "write_file",
+    "write_content_to_file",
     "replace_lines",
     "add_lines",
 ];
@@ -383,7 +383,7 @@ pub fn available_tools(
     let query_pipeline = indexing::build_query_pipeline(repository)?;
 
     let mut tools = vec![
-        tools::write_file(),
+        tools::write_content_to_file(),
         tools::search_file(),
         tools::git(),
         tools::shell_command(),
@@ -394,7 +394,7 @@ pub fn available_tools(
 
     match repository.config().agent_edit_mode {
         AgentEditMode::Whole => {
-            tools.push(tools::write_file());
+            tools.push(tools::write_content_to_file());
             tools.push(tools::read_file());
         }
         AgentEditMode::Line => {

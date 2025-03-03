@@ -99,7 +99,7 @@ IMPORTANT:
     param(name = "file_name", description = "Full path of the file"),
     param(name = "content", description = "FULL Content to write to the file"),
 )]
-pub async fn write_file(
+pub async fn write_content_to_file(
     context: &dyn AgentContext,
     file_name: &str,
     content: &str,

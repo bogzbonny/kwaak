@@ -206,7 +206,7 @@ pub fn build_system_prompt(repository: &Repository) -> Result<Prompt> {
 
     if repository.config().agent_edit_mode.is_line() {
         constraints.extend( [
-        "Prefer editing files with `replace_lines` and `add_lines` over `write_file`, if possible. This is faster and less error prone. You can only make ONE `replace_lines` or `add_lines` call at the time. After each you MUST call `read_file_with_line_numbers` again, as the linenumbers WILL have changed.",
+        "Prefer editing files with \x60replace_lines\x60 and \x60add_lines\x60 over \x60write_content_to_file\x60, if possible. This is faster and less error prone. You can only make ONE \x60replace_lines\x60 or \x60add_lines\x60 call at the time. After each you MUST call \x60read_file_with_line_numbers\x60 again, as the linenumbers WILL have changed.",
         "If you are only adding NEW lines, you MUST use `add_lines`",
         "Before every call to `replace_lines` or `add_lines`, you MUST read the file content with the line numbers. You are not allowed to count lines yourself.",
 
