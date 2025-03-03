@@ -274,7 +274,7 @@ async fn test_read_file() {
 
 #[test_log::test(tokio::test)]
 async fn test_write_file() {
-    let tool = tools::replace_or_create_file();
+    let tool = tools::write_file();
     let context = setup_context();
 
     let tempdir = tempdir().unwrap();

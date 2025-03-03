@@ -85,7 +85,7 @@ pub async fn read_file_with_line_numbers(
     Ok(lines.collect::<Vec<_>>().join("\n").into())
 }
 
-const REPLACE_FILE_DESCRIPTION: &str = "This is a tool for creating or replacing an entire file with the provided contents and at the provided full file path. 
+const WRITE_FILE_DESCRIPTION: &str = "This is a tool for creating or replacing an entire file with the provided contents and at the provided full file path. 
 
 Before using this tool:
  - read the file content with read_file to retrieve the full file content
@@ -104,11 +104,11 @@ WARNING:
 ";
 
 #[tool(
-    description = REPLACE_FILE_DESCRIPTION,
+    description = WRITE_FILE_DESCRIPTION,
     param(name = "file_name", description = "Full path of the file"),
     param(name = "content", description = "FULL Content to write to the file"),
 )]
-pub async fn replace_or_create_file(
+pub async fn write_file(
     context: &dyn AgentContext,
     file_name: &str,
     content: &str,

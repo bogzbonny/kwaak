@@ -157,7 +157,7 @@ fn pretty_format_tool(tool_call: &swiftide::chat_completion::ToolCall) -> Option
     Some(match tool_call.name() {
         "shell_command" => format!("running shell command `{}`", get_value(parsed_args, "cmd")?),
         "read_file" => format!("reading file `{}`", get_value(parsed_args, "file_name")?),
-        "replace_or_create_file" => format!("writing file \x60{}\x60", get_value(parsed_args, "file_name")?),
+        "write_file" => format!("writing file \x60{}\x60", get_value(parsed_args, "file_name")?),
         "search_file" => format!(
             "searching for files matching `{}`",
             get_value(parsed_args, "file_name")?
