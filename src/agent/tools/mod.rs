@@ -85,7 +85,7 @@ pub async fn read_file_with_line_numbers(
     Ok(lines.collect::<Vec<_>>().join("\n").into())
 }
 
-const WRITE_FILE_DESCRIPTION: &str = "Write to a file. This tool creates or overwrites a file with the specified name and content. Both the filename and the full file content must be provided every time this tool is used.
+const WRITE_FILE_DESCRIPTION: &str = "Create or overwrite a file with the provided content and at the provided file name. Both the filename and the full file content must be provided each time you call this tool.
 
 IMPORTANT:
  - DO NOT omit or leave blank either the file_name or content fields.
