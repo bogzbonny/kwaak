@@ -97,7 +97,7 @@ IMPORTANT:
 #[tool(
     description = WRITE_FILE_DESCRIPTION,
     param(name = "file_name", description = "Full path of the file"),
-    param(name = "content", description = "FULL Content to write to the file")
+    param(name = "content", description = "FULL Content to write to the file"),
 )]
 pub async fn write_file(
     context: &dyn AgentContext,
