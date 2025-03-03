@@ -41,7 +41,8 @@ pub enum Command {
 
     /// Fetch a GitHub issue and its comments
     /// The agent will summarize the issue and
-    GithubIssue { number: u64 },
+    /// If no number is provided, lists the 30 most recent issues
+    GithubIssue { number: Option<u64> },
 }
 
 #[derive(Debug, Clone, Builder)]
