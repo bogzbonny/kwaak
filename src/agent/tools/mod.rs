@@ -85,7 +85,7 @@ pub async fn read_file_with_line_numbers(
     Ok(lines.collect::<Vec<_>>().join("\n").into())
 }
 
-const WRITE_FILE_DESCRIPTION: &str = "This is a tool for creating or replacing an entire file with the provided contents and at the provided full file path. 
+const WRITE_FILE_DESCRIPTION: &str = "This is a tool for creating or overwriting an entire file with the provided contents and at the provided full file path. 
 
 Before using this tool:
  - read the file content with read_file to retrieve the full file content
