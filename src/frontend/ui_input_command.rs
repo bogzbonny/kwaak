@@ -138,15 +138,16 @@ impl UserInputCommand {
                 Ok(UserInputCommand::Diff(diff_variant))
             }
             UserInputCommand::GithubIssue(_) => {
-                let Some(issue_number) = subcommand else {
-                    return Err(anyhow::anyhow!("GitHub issue number is required"));
-                };
+                // If no subcommand (issue number) is provided, return None to list recent issues
+                if subcommand.is_none() {
+                    return Ok(UserInputCommand::GithubIssue(None));
+                }
 
-                let issue_number = issue_number.parse::<u64>().with_context(|| {
-                    format!("failed to parse GitHub issue number {issue_number}")
+                let issue_number = subcommand.unwrap().parse::<u64>().with_context(|| {
+                    format!("failed to parse GitHub issue number {}", subcommand.unwrap())
                 })?;
 
-                Ok(UserInputCommand::GithubIssue(issue_number))
+                Ok(UserInputCommand::GithubIssue(Some(issue_number)))
             }
             _ => Ok(input_cmd),
         }
