@@ -51,7 +51,7 @@ pub enum UserInputCommand {
     Help,
     /// Fetch, analyze, and fix a GitHub issue. Example usage: `/gh_issue 123`
     #[strum(serialize = "gh_issue")]
-    GithubIssue(u64),
+    GithubIssue(Option<u64>),
 }
 
 #[derive(
