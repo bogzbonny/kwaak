@@ -50,6 +50,7 @@ pub enum UserInputCommand {
     /// Print help
     Help,
     /// Fetch, analyze, and fix a GitHub issue. Example usage: `/gh_issue 123`
+    /// If no number is provided, lists the 30 most recent issues. Example usage: `/gh_issue`
     #[strum(serialize = "gh_issue")]
     GithubIssue(Option<u64>),
 }
