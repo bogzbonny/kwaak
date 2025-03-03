@@ -196,8 +196,9 @@ mod tests {
     #[test]
     fn test_parse_github_issue_input() {
         let test_cases = vec![
-            ("/gh_issue 123", UserInputCommand::GithubIssue(123)),
-            ("/gh_issue 456", UserInputCommand::GithubIssue(456)),
+            ("/gh_issue 123", UserInputCommand::GithubIssue(Some(123))),
+            ("/gh_issue 456", UserInputCommand::GithubIssue(Some(456))),
+            ("/gh_issue", UserInputCommand::GithubIssue(None)),
         ];
 
         for (input, expected_command) in test_cases {
@@ -207,6 +208,7 @@ mod tests {
                 "expected: {expected_command:?} for: {input:?}",
             );
         }
+    }
     }
 
     #[test]
