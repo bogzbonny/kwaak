@@ -85,8 +85,17 @@ pub async fn read_file_with_line_numbers(
     Ok(lines.collect::<Vec<_>>().join("\n").into())
 }
 
+const WRITE_FILE_DESCRIPTION: &str = "Write to a file. This tool creates or overwrites a file with the specified name and content. Both the filename and the full file content must be provided every time this tool is used.
+
+IMPORTANT:
+ - DO NOT omit or leave blank either the file_name or content fields.
+ - You MUST ALWAYS include the full file content, including what you did not change, as this tool overwrites the full file
+ - The file_name must be the FULL file path, including the file extension.
+ - If the file already exists, it will be fully replaced with the new content.
+ - Only make necessary changes that pertain to your task.";
+
 #[tool(
-    description = "Write to a file. You MUST ALWAYS include the full file content, including what you did not change, as it overwrites the full file. Only make changes that pertain to your task.",
+    description = WRITE_FILE_DESCRIPTION,
     param(name = "file_name", description = "Full path of the file"),
     param(name = "content", description = "FULL Content to write to the file")
 )]
