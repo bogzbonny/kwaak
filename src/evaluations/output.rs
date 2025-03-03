@@ -51,7 +51,7 @@ impl EvalOutput {
         Ok(())
     }
 
-    pub fn write_content_to_file(&self, name: &str, content: &str) -> Result<()> {
+    pub fn replace_or_create_file(&self, name: &str, content: &str) -> Result<()> {
         fs::write(self.iteration_dir.join(name), content)?;
         Ok(())
     }

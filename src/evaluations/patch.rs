@@ -178,7 +178,7 @@ fn write_failure_info(
         content.push_str(&format!("{addition}\n"));
     }
 
-    eval_output.write_content_to_file("failed", &content)?;
+    eval_output.replace_or_create_file("failed", &content)?;
     Ok(())
 }
 
@@ -186,7 +186,7 @@ fn get_evaluation_tools() -> Vec<Box<dyn Tool>> {
     let tools: Vec<Box<dyn Tool>> = vec![
         tools::search_file(),
         tools::read_file(),
-        tools::write_content_to_file(),
+        tools::replace_or_create_file(),
         tools::read_file_with_line_numbers(),
         tools::replace_lines(),
     ];

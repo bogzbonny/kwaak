@@ -39,7 +39,7 @@ async fn test_diff() {
     app.dispatch_command(
         uuid,
         Command::Exec {
-            cmd: swiftide::traits::Command::write_content_to_file("hello.txt", "world"),
+            cmd: swiftide::traits::Command::replace_or_create_file("hello.txt", "world"),
         },
     );
 

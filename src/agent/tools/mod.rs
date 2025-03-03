@@ -85,21 +85,30 @@ pub async fn read_file_with_line_numbers(
     Ok(lines.collect::<Vec<_>>().join("\n").into())
 }
 
-const WRITE_FILE_DESCRIPTION: &str = "Create or overwrite a file with the provided content and at the provided file name. Both the filename and the full file content must be provided each time you call this tool.
+const REPLACE_FILE_DESCRIPTION: &str = "This is a tool for creating or replacing an entire file with the provided contents and at the provided full file path. 
 
-IMPORTANT:
- - DO NOT omit or leave blank either the file_name or content fields.
- - You MUST ALWAYS include the full file content, including what you did not change, as this tool overwrites the full file
- - The file_name must be the FULL file path, including the file extension.
- - If the file already exists, it will be fully replaced with the new content.
- - Only make necessary changes that pertain to your task.";
+Before using this tool:
+ - read the file content with read_file to retrieve the full file content
+ - verify the file path is correct
+
+When calling this tool:
+ - you MUST include both the file_name and the content fields
+ - you MUST read the file first BEFORE EVERY EDIT
+ - you MUST ALWAYS provide the full file content, including what you did not change, as this tool overwrites the entire file
+ - the file_name must be the FULL file path, including the file extension
+ - if the file already exists, it will be fully replaced with the new content
+ - only make necessary changes that pertain to your task
+
+WARNING:
+ - If you do not include both the file_name and the content fields, this tool will fail.
+";
 
 #[tool(
-    description = WRITE_FILE_DESCRIPTION,
+    description = REPLACE_FILE_DESCRIPTION,
     param(name = "file_name", description = "Full path of the file"),
     param(name = "content", description = "FULL Content to write to the file"),
 )]
-pub async fn write_content_to_file(
+pub async fn replace_or_create_file(
     context: &dyn AgentContext,
     file_name: &str,
     content: &str,
