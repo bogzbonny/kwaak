@@ -266,6 +266,67 @@ impl GithubSession {
 
         summary
     }
+    /// Fetches the 30 most recent issues
+    ///
+    /// # Returns
+    ///
+    /// A list of issues
+    #[tracing::instrument(skip(self), err)]
+    pub async fn fetch_recent_issues(&self) -> Result<Vec<octocrab::models::issues::Issue>> {
+        if !self.repository.config().is_github_enabled() {
+            return Err(anyhow::anyhow!("Github is not enabled"));
+        }
+
+        // Above checks make the unwrap infallible
+        let owner = self.repository.config().git.owner.as_deref().unwrap();
+        let repo = self.repository.config().git.repository.as_deref().unwrap();
+
+        // Fetch up to 30 issues, ordered by most recently updated
+        let issues = self
+            .octocrab
+            .issues(owner, repo)
+            .list()
+            .state(octocrab::params::State::All) // Get both open and closed issues
+            .sort(octocrab::params::issues::Sort::Updated)
+            .direction(octocrab::params::Direction::Descending)
+            .per_page(30)
+            .send()
+            .await
+            .context("Failed to fetch recent issues")?
+            .items;
+
+        Ok(issues)
+    }
+
+    /// Formats a list of issues as markdown
+    pub fn format_issue_list(&self, issues: &[octocrab::models::issues::Issue]) -> String {
+        if issues.is_empty() {
+            return "No issues found.".to_string();
+        }
+
+        let mut markdown = String::from("# Recent GitHub Issues\n\n");
+        markdown.push_str("| # | State | Title | Author | Created |\n");
+        markdown.push_str("|---|-------|-------|--------|--------|\n");
+
+        for issue in issues {
+            let state = match issue.state {
+                octocrab::models::IssueState::Open => "🟢 Open",
+                octocrab::models::IssueState::Closed => "🔴 Closed",
+                _ => "Unknown",
+            };
+
+            markdown.push_str(&format!(
+                "| #{} | {} | {} | {} | {} |\n",
+                issue.number,
+                state,
+                issue.title,
+                issue.user.login,
+                issue.created_at.format("%Y-%m-%d"),
+            ));
+        }
+
+        markdown
+    }
 }
 
 // Temporarily disabled, if messages get too large the PR can't be created.
