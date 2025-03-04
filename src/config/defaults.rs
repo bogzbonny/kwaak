@@ -92,6 +92,23 @@ fn extract_owner_and_repo(url: &str) -> Option<(String, String)> {
         Some((owner, repo))
     })
 }
+/// Resolves a configuration path by checking multiple locations with precedence
+/// First checks in the repository root, then in the .config/kwaak directory
+#[must_use]
+pub fn resolve_config_path(filename: &str) -> PathBuf {
+    let root_path = PathBuf::from(format!("./{}", filename));
+    if root_path.exists() {
+        return root_path;
+    }
+
+    let config_path = PathBuf::from(format!("./.config/kwaak/{}", filename));
+    if config_path.exists() {
+        return config_path;
+    }
+
+    // Default to root as fallback
+    root_path
+}
 
 #[cfg(test)]
 mod test {
